@@ -1,0 +1,28 @@
+{
+  "comment": "metadata for Chrome extension (Manisfest 3)",
+  "manifest_version": 3,
+  "name": "Neutralize Timers",
+  "description": "Slows background loops",
+  "version": "0.6.0",
+
+  "action": {
+    "default_title": "Neutralize Timers"
+  },
+
+  "permissions": [],
+
+  "host_permissions": ["<all_urls>"],
+
+  "background": {
+    "service_worker": "background.js"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start",
+      "world": "MAIN"
+    }
+  ]
+}
