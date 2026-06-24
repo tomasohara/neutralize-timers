@@ -1,0 +1,19 @@
+{
+    "comment": "Node.js package manager configuration (npm)",
+    "name": "neutralize-timers",
+    "type": "module",
+    "version": "1.0.0",
+    "description": "",
+    "main": "background.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "@eslint/js": "^10.0.1",
+        "eslint": "^10.5.0",
+        "globals": "^17.7.0"
+    }
+}
