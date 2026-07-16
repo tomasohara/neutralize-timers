@@ -1,5 +1,5 @@
 /* jshint esversion: 6 */
-/*global chrome */
+console.debug("Neutralize Timers: background.js invoked");
 
 chrome.runtime.onInstalled.addListener(() => {
   console.log("Neutralize Times installed");

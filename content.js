@@ -13,11 +13,18 @@
 // JSLint options:
 /*jslint browser, devel, node, trace, beta, bitwise, convert, eval, fart, for, getset, indent2, nomen, single, subscript, long, this, unordered, variable, white */
 
-/*global chrome, console*/
-console.debug("chrome=" + chrome);
+
+console.debug("Neutralize Timers: content.js invoked");
 
 const setup = function () {
-    const MIN_DELAY = 60000;
+    let MIN_DELAY = 60000;
+
+    window.addEventListener("message", (event) => {
+        if (event.source !== window || !event.data || event.data.type !== "NEUTRALIZE_TIMERS_CONFIG") {
+            return;
+        }
+        MIN_DELAY = event.data.config.minDelay;
+    });
 
     const realSetTimeout = window.setTimeout;
     const realSetInterval = window.setInterval;
@@ -79,25 +86,6 @@ const setup = function () {
         }
     };
 
-    // --------------------------------------------------
-    // Kill CSS animations (spinners, loaders, etc.)
-
-    function disable_animations () {
-        console.log("Disabling animation");
-
-        const style = document.createElement("style");
-
-        style.textContent = `
-            * {
-              animation: none !important;
-              transition: none !important;
-            }
-           `;
-
-        document.documentElement.appendChild(style);
-    }
-
-    disable_animations();
 
 };
 

@@ -5,6 +5,9 @@
 import js from "@eslint/js";
 
 export default [
+  {
+    ignores: ["eslint.config.mjs"]
+  },
   js.configs.recommended,
   {
     languageOptions: {
@@ -13,12 +16,14 @@ export default [
       globals: {
         window: "readonly",
         document: "readonly",
-        // OLD: chrome: "readonly",
         clearInterval: "readonly",
-        // OLD: console: "readonly",
         setInterval: "readonly",
         setTimeout: "readonly",
-        clearTimeout: "readonly"
+        clearTimeout: "readonly",
+        chrome: "readonly",
+        console: "readonly",
+        MutationObserver: "readonly",
+        requestAnimationFrame: "readonly"
       }
     },
     rules: {
