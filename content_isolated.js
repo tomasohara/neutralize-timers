@@ -1,4 +1,6 @@
 /* jshint esversion: 6, browser: true */
+//
+// Via Antigravity
 
 
 // Run in an IIFE to avoid creating global variables (ESLint no-implicit-globals)
@@ -77,6 +79,17 @@
                 displayControls.style.display = "inline-flex";
                 displayControls.style.alignItems = "center";
 
+                // Enable toggle directly on the overlay
+                const directEnableInput = document.createElement("input");
+                directEnableInput.type = "checkbox";
+                directEnableInput.id = "nt-direct-enable";
+                directEnableInput.title = "Toggle Extension";
+                directEnableInput.style.cssText = "margin-right: 5px; cursor: pointer; margin-top: 0; margin-bottom: 0; accent-color: #8b7355;";
+                
+                directEnableInput.addEventListener('change', (e) => {
+                    chrome.storage.sync.set({ isEnabled: e.target.checked });
+                });
+
                 // Display container for the simple label
                 const displaySpan = document.createElement("span");
                 displaySpan.id = "nt-display";
@@ -95,6 +108,7 @@
                 hideBtn.style.cssText = "margin-left: 5px; cursor: pointer; background: transparent; border: none; font-size: 10px; padding: 0; color: #443a29;";
                 hideBtn.title = "Hide Legend globally";
                 
+                displayControls.appendChild(directEnableInput);
                 displayControls.appendChild(displaySpan);
                 displayControls.appendChild(helpBtn);
                 displayControls.appendChild(hideBtn);
@@ -102,8 +116,12 @@
                 
                 // Help popup
                 const helpPopup = document.createElement("div");
-                helpPopup.style.cssText = "display: none; position: absolute; top: 100%; right: 0; margin-top: 5px; width: 220px; padding: 8px; background: #fff; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-radius: 4px; font-size: 11px; color: #333; z-index: 2147483647; text-align: left; font-family: sans-serif; cursor: default; user-select: text;";
+                helpPopup.style.cssText = "display: none; position: absolute; top: 100%; right: 0; margin-top: 5px; width: 220px; padding: 8px; background: rgba(245, 222, 179, 0.95); border: 1px solid #d2b48c; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-radius: 4px; font-size: 11px; color: #443a29; z-index: 2147483647; text-align: left; font-family: sans-serif; cursor: default; user-select: text;";
                 
+                const helpEnableTitle = document.createElement("strong");
+                helpEnableTitle.textContent = "Enable: ";
+                const helpEnableText = document.createTextNode("Toggles the extension on or off entirely.");
+
                 const helpDelayTitle = document.createElement("strong");
                 helpDelayTitle.textContent = "Delay: ";
                 const helpDelayText = document.createTextNode("The minimum time (in ms) allowed between repeated actions. Higher values slow down background loops.");
@@ -112,12 +130,22 @@
                 helpAnimTitle.textContent = "Anim Off: ";
                 const helpAnimText = document.createTextNode("When checked, disables all CSS animations and transitions on the page, preventing spinning loaders and moving elements.");
                 
+                const helpReloadNote = document.createElement("div");
+                helpReloadNote.style.marginTop = "8px";
+                helpReloadNote.style.fontStyle = "italic";
+                helpReloadNote.textContent = "Note: Changes may require a page reload to take full effect on existing elements and timers.";
+
+                helpPopup.appendChild(helpEnableTitle);
+                helpPopup.appendChild(helpEnableText);
+                helpPopup.appendChild(document.createElement("br"));
+                helpPopup.appendChild(document.createElement("br"));
                 helpPopup.appendChild(helpDelayTitle);
                 helpPopup.appendChild(helpDelayText);
                 helpPopup.appendChild(document.createElement("br"));
                 helpPopup.appendChild(document.createElement("br"));
                 helpPopup.appendChild(helpAnimTitle);
                 helpPopup.appendChild(helpAnimText);
+                helpPopup.appendChild(helpReloadNote);
                 
                 legend.appendChild(helpPopup);
                 
@@ -128,7 +156,7 @@
                 
                 hideBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
-                    chrome.storage.sync.set({ showLegend: false });
+                    legend.style.display = "none";
                 });
                 
                 // Close help when clicking elsewhere
@@ -142,6 +170,17 @@
                 const editForm = document.createElement("form");
                 editForm.id = "nt-edit";
                 editForm.style.display = "none";
+                
+                const enableLabel = document.createElement("label");
+                enableLabel.style.marginRight = "5px";
+                enableLabel.style.cursor = "pointer";
+                enableLabel.textContent = "Enable: ";
+                const enableInput = document.createElement("input");
+                enableInput.type = "checkbox";
+                enableInput.id = "nt-enable-input";
+                enableInput.style.accentColor = "#8b7355";
+                enableLabel.appendChild(enableInput);
+                
                 const label1 = document.createElement("label");
                 label1.style.marginRight = "5px";
                 label1.style.cursor = "pointer";
@@ -160,6 +199,7 @@
                 const animInput = document.createElement("input");
                 animInput.type = "checkbox";
                 animInput.id = "nt-anim-input";
+                animInput.style.accentColor = "#8b7355";
                 label2.appendChild(animInput);
                 
                 const saveBtn = document.createElement("button");
@@ -180,6 +220,7 @@
                 cancelBtn.style.border = "none";
                 cancelBtn.textContent = "X";
                 
+                editForm.appendChild(enableLabel);
                 editForm.appendChild(label1);
                 editForm.appendChild(label2);
                 editForm.appendChild(saveBtn);
@@ -202,10 +243,12 @@
                 // Handle form submission to save settings globally
                 editForm.addEventListener('submit', (e) => {
                     e.preventDefault();
+                    const newEnable = editForm.querySelector('#nt-enable-input').checked;
                     const newDelay = parseInt(editForm.querySelector('#nt-delay-input').value, 10);
                     const newAnim = editForm.querySelector('#nt-anim-input').checked;
                     
                     chrome.storage.sync.set({
+                        isEnabled: newEnable,
                         minDelay: isNaN(newDelay) ? 60000 : newDelay,
                         disableAnimations: newAnim
                     }, () => {
@@ -221,9 +264,10 @@
                     displayControls.style.display = "inline-flex";
                     
                     // Reset inputs to current config
-                    chrome.storage.sync.get(['minDelay', 'disableAnimations'], (items) => {
-                        editForm.querySelector("#nt-delay-input").value = items.minDelay;
-                        editForm.querySelector("#nt-anim-input").checked = items.disableAnimations;
+                    chrome.storage.sync.get(['isEnabled', 'minDelay', 'disableAnimations'], (items) => {
+                        editForm.querySelector("#nt-enable-input").checked = items.isEnabled !== false;
+                        editForm.querySelector("#nt-delay-input").value = items.minDelay || 60000;
+                        editForm.querySelector("#nt-anim-input").checked = items.disableAnimations !== false;
                     });
                 });
 
@@ -239,7 +283,13 @@
             }
 
             // Update displayed values whenever config is loaded/reloaded
-            legend.querySelector("#nt-display").textContent = `NT: Delay ${config.minDelay}ms | Anim ${config.disableAnimations ? 'Off' : 'On'}`;
+            legend.querySelector("#nt-display").textContent = config.isEnabled ? 
+                `NT: Delay ${config.minDelay}ms | Anim ${config.disableAnimations ? 'Off' : 'On'}` : 
+                `NT: Disabled`;
+            legend.querySelector("#nt-enable-input").checked = config.isEnabled;
+            if (legend.querySelector("#nt-direct-enable")) {
+                legend.querySelector("#nt-direct-enable").checked = config.isEnabled;
+            }
             legend.querySelector("#nt-delay-input").value = config.minDelay;
             legend.querySelector("#nt-anim-input").checked = config.disableAnimations;
 
@@ -256,16 +306,18 @@
      */
     function loadConfig() {
         chrome.storage.sync.get({
+            isEnabled: true,
             minDelay: 60000,
             disableAnimations: true,
             showLegend: false
         }, (config) => {
             // Send the loaded configuration to the main world content script (content.js)
             // so it can adjust its MIN_DELAY variable dynamically.
-            window.postMessage({ type: "NEUTRALIZE_TIMERS_CONFIG", config: config }, "*");
+            const actualDelay = config.isEnabled ? config.minDelay : 0;
+            window.postMessage({ type: "NEUTRALIZE_TIMERS_CONFIG", config: { minDelay: actualDelay } }, "*");
             
             // Apply visual changes based on config
-            applyStyles(config.disableAnimations);
+            applyStyles(config.isEnabled && config.disableAnimations);
             applyLegend(config);
         });
     }

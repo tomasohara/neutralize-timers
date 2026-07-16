@@ -1,4 +1,6 @@
 /* jshint esversion: 6, browser: true */
+//
+// Via Antigravity
 
 
 // Wrap in an IIFE to prevent polluting the global scope
@@ -11,10 +13,12 @@
      */
     document.addEventListener('DOMContentLoaded', () => {
         chrome.storage.sync.get({
+            isEnabled: true,
             minDelay: 60000,
             disableAnimations: true,
             showLegend: false
         }, (items) => {
+            document.getElementById('isEnabled').checked = items.isEnabled;
             document.getElementById('minDelay').value = items.minDelay;
             document.getElementById('disableAnimations').checked = items.disableAnimations;
             document.getElementById('showLegend').checked = items.showLegend;
@@ -26,11 +30,13 @@
      * Also displays a temporary success message.
      */
     document.getElementById('save').addEventListener('click', () => {
+        const isEnabled = document.getElementById('isEnabled').checked;
         const minDelay = parseInt(document.getElementById('minDelay').value, 10);
         const disableAnimations = document.getElementById('disableAnimations').checked;
         const showLegend = document.getElementById('showLegend').checked;
 
         chrome.storage.sync.set({
+            isEnabled: isEnabled,
             minDelay: isNaN(minDelay) ? 60000 : minDelay,
             disableAnimations: disableAnimations,
             showLegend: showLegend
