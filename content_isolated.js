@@ -71,12 +71,72 @@
                     userSelect: 'none' // Prevent text selection on double click
                 });
 
+                // Controls container
+                const displayControls = document.createElement("span");
+                displayControls.id = "nt-display-controls";
+                displayControls.style.display = "inline-flex";
+                displayControls.style.alignItems = "center";
+
                 // Display container for the simple label
                 const displaySpan = document.createElement("span");
                 displaySpan.id = "nt-display";
                 displaySpan.style.cursor = "pointer";
                 displaySpan.title = "Double-click to edit Neutralize Timers settings";
-                legend.appendChild(displaySpan);
+                
+                // Help button
+                const helpBtn = document.createElement("button");
+                helpBtn.textContent = "?";
+                helpBtn.style.cssText = "margin-left: 8px; cursor: pointer; background: transparent; border: 1px solid #d2b48c; border-radius: 50%; width: 14px; height: 14px; font-size: 9px; line-height: 12px; padding: 0; color: #443a29; display: flex; align-items: center; justify-content: center;";
+                helpBtn.title = "Help";
+                
+                // Hide button
+                const hideBtn = document.createElement("button");
+                hideBtn.textContent = "✖";
+                hideBtn.style.cssText = "margin-left: 5px; cursor: pointer; background: transparent; border: none; font-size: 10px; padding: 0; color: #443a29;";
+                hideBtn.title = "Hide Legend globally";
+                
+                displayControls.appendChild(displaySpan);
+                displayControls.appendChild(helpBtn);
+                displayControls.appendChild(hideBtn);
+                legend.appendChild(displayControls);
+                
+                // Help popup
+                const helpPopup = document.createElement("div");
+                helpPopup.style.cssText = "display: none; position: absolute; top: 100%; right: 0; margin-top: 5px; width: 220px; padding: 8px; background: #fff; border: 1px solid #ccc; box-shadow: 0 2px 5px rgba(0,0,0,0.2); border-radius: 4px; font-size: 11px; color: #333; z-index: 2147483647; text-align: left; font-family: sans-serif; cursor: default; user-select: text;";
+                
+                const helpDelayTitle = document.createElement("strong");
+                helpDelayTitle.textContent = "Delay: ";
+                const helpDelayText = document.createTextNode("The minimum time (in ms) allowed between repeated actions. Higher values slow down background loops.");
+                
+                const helpAnimTitle = document.createElement("strong");
+                helpAnimTitle.textContent = "Anim Off: ";
+                const helpAnimText = document.createTextNode("When checked, disables all CSS animations and transitions on the page, preventing spinning loaders and moving elements.");
+                
+                helpPopup.appendChild(helpDelayTitle);
+                helpPopup.appendChild(helpDelayText);
+                helpPopup.appendChild(document.createElement("br"));
+                helpPopup.appendChild(document.createElement("br"));
+                helpPopup.appendChild(helpAnimTitle);
+                helpPopup.appendChild(helpAnimText);
+                
+                legend.appendChild(helpPopup);
+                
+                helpBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    helpPopup.style.display = helpPopup.style.display === "none" ? "block" : "none";
+                });
+                
+                hideBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    chrome.storage.sync.set({ showLegend: false });
+                });
+                
+                // Close help when clicking elsewhere
+                document.addEventListener('click', (e) => {
+                    if (!legend.contains(e.target)) {
+                        helpPopup.style.display = "none";
+                    }
+                });
 
                 // Edit form container for inline controls
                 const editForm = document.createElement("form");
@@ -127,9 +187,13 @@
                 legend.appendChild(editForm);
 
                 // Handle double click to enter edit mode
-                legend.addEventListener('dblclick', () => {
+                legend.addEventListener('dblclick', (e) => {
+                    // Prevent triggering if double clicking the help popup or buttons
+                    if (helpPopup.contains(e.target) || e.target === helpBtn || e.target === hideBtn) return;
+                    
                     if (editForm.style.display === "none") {
-                        displaySpan.style.display = "none";
+                        displayControls.style.display = "none";
+                        helpPopup.style.display = "none"; // ensure help is closed
                         editForm.style.display = "inline-flex";
                         editForm.style.alignItems = "center";
                     }
@@ -146,7 +210,7 @@
                         disableAnimations: newAnim
                     }, () => {
                         editForm.style.display = "none";
-                        displaySpan.style.display = "inline";
+                        displayControls.style.display = "inline-flex";
                     });
                 });
 
@@ -154,7 +218,7 @@
                 editForm.querySelector('#nt-cancel-btn').addEventListener('click', (e) => {
                     e.stopPropagation(); // prevent dblclick from triggering again
                     editForm.style.display = "none";
-                    displaySpan.style.display = "inline";
+                    displayControls.style.display = "inline-flex";
                     
                     // Reset inputs to current config
                     chrome.storage.sync.get(['minDelay', 'disableAnimations'], (items) => {
